@@ -1,0 +1,47 @@
+<!--Gino Moena (gino.moena@gmail.com) 2019-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Live editor GM</title>
+  </head>
+  <body>
+    <textarea id="textarea1" rows="4" cols="50"></textarea>
+    <br>
+    <label id="label1" hidden>Desconectado del servidor. <a href="/data">¿Recargar página?</a></label>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+    <script>
+      const rand = () => {
+        return Math.random().toString(36).substr(2)
+      }
+
+      const token = () => {
+        return rand() + rand()
+      }
+
+      let localToken = token()
+
+      $(function () {
+        const socket = io()
+        $('#textarea1').keyup(() =>{
+          socket.emit('edit', {token: localToken, text: $('#textarea1').val()})
+        })
+
+        socket.on('edit', (msg) => {
+          if (msg.token !== localToken) {
+            console.log(`in: ${msg.token} local: ${localToken}`)
+            $('#textarea1').val(msg.text)
+          }
+        })
+        socket.on('disconnect', (lol) => {
+          console.log(lol)
+          console.log('disconnected')
+          $('#label1').show()
+          $('#textarea1').prop('disabled', true)
+        })
+      })
+    </script>
+  </body>
+</html>
