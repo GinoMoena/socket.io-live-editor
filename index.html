@@ -13,6 +13,8 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 
     <script>
+      // Generar un token random para la conexión actual, este token permitirá reconocer el origen del mensaje
+      // en caso de que el origen sea el mismo (o sea este mismo cliente) el mensaje se ignora para evitar errores.
       const rand = () => {
         return Math.random().toString(36).substr(2)
       }
@@ -25,19 +27,23 @@
 
       $(function () {
         const socket = io()
+        // se emiten cambios cada vez que se escribe en el campo textarea1
         $('#textarea1').keyup(() =>{
           socket.emit('edit', {token: localToken, text: $('#textarea1').val()})
         })
 
+        // cada vez que se reciba un mensaje del servidor se filtrará en caso de que el origen sea este mismo
         socket.on('edit', (msg) => {
           if (msg.token !== localToken) {
             console.log(`in: ${msg.token} local: ${localToken}`)
             $('#textarea1').val(msg.text)
           }
         })
-        socket.on('disconnect', (lol) => {
-          console.log(lol)
-          console.log('disconnected')
+
+        // en caso de existir una perdida de conexión con el servidor se bloquea el área de texto y se fuerza
+        // al cliente a que recargue la página
+        socket.on('disconnect', (err) => {
+          console.log(err)
           $('#label1').show()
           $('#textarea1').prop('disabled', true)
         })
